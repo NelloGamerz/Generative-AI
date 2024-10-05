@@ -6,7 +6,9 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/static/css/main.css">
-    <link rel="shortcut icon" href="https://chat.openai.com/favicon.ico" type="image/x-icon">
+    <!-- <link rel="shortcut icon" href="https://chat.openai.com/favicon.ico" type="image/x-icon"> -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/themes/prism-okaidia.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/prism.min.js"></script>
     <style>
         .right2 {
             display: none;
@@ -27,6 +29,7 @@
             border-radius: 10px;
             max-width: 60%;
             word-wrap: break-word;
+            white-space: pre-wrap;
         }
 
         .user-bubble {
@@ -70,6 +73,47 @@
         .input-area button:hover {
             background-color: #45a049;
         }
+
+        .chat-bubble {
+            margin: 10px;
+            padding: 15px;
+            border-radius: 10px;
+            max-width: 80%;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            background-color: #4d4d4d;
+            color: white;
+        }
+
+        .response-bubble {
+            align-self: flex-start;
+        }
+
+        /* Adjust code block styling */
+        pre {
+            background-color: #2d2d2d;
+            padding: 10px;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+
+        /* Highlight different roles */
+        .user-bubble {
+            background-color: #2f88f0;
+        }
+
+        .ai-response {
+            background-color: #383838;
+            color: #dcdcdc;
+        }
+
+        /* Prism JS for code syntax highlighting */
+        code[class*="language-"], pre[class*="language-"] {
+            color: #fff;
+            background: #1e1e1e;
+            border-radius: 8px;
+            padding: 10px;
+        }
     </style>
     <title>Chat Interface</title>
 </head>
@@ -88,7 +132,7 @@
             </button>
             <div class="text-xs m-4 mx-8 text-gray-400">Today</div>
             <div class="chats flex flex-col justify-center items-center space-y-2">
-                {% for chat in myChats %} 
+                {% for chat in myChats %}
                 <div
                     class="chat space-x-2 opacity-80 w-[90%] px-5 py-2 rounded-md bg-gray-600 cursor-pointer flex justify-start items-center">
                     <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round"
@@ -104,72 +148,28 @@
 
         <!-- Chat messages area -->
         <div class="right1 w-10/12 flex justify-center items-center flex-col">
-    <div class="chat-container w-full h-[85vh] overflow-y-auto mb-24" id="chatContainer"></div> <!-- Adjusted height to fit chat above the input area -->
+            <div class="chat-container w-full h-[85vh] overflow-y-auto mb-24" id="chatContainer"></div> <!-- Adjusted height to fit chat above the input area -->
 
-    <div class="input w-full text-center fixed bottom-0 left-0 flex items-center justify-center bg-gray-800 px-4"> <!-- Removed upper and bottom padding -->
-        <div class="buttonsvg w-[50vw] flex relative">
-            <input class="w-full p-4 bg-gray-600 rounded-md" placeholder="Send a Message" type="text" name="text" id="questionInput">
-            
-            <button id="sendButton" class="relative -left-20 pl-10">
-                <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round"
-                    stroke-linejoin="round" class="h-4 w-4 mr-1" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
-                    <line x1="22" y1="2" x2="11" y2="13"></line>
-                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                </svg>
-            </button>
+            <div class="input w-full text-center fixed bottom-0 left-0 flex items-center justify-center bg-gray-800 px-4">
+                <!-- Removed upper and bottom padding -->
+                <div class="buttonsvg w-[50vw] flex relative">
+                    <input class="w-full p-4 bg-gray-600 rounded-md" placeholder="Send a Message" type="text" name="text"
+                        id="questionInput">
+
+                    <button id="sendButton" class="relative -left-20 pl-10">
+                        <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24"
+                            stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 mr-1" height="1em"
+                            width="1em" xmlns="http://www.w3.org/2000/svg">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                    </button>
+                </div>
+            </div>
         </div>
-    </div>                        
-</div>
 
-    </div>
-        
+    <script src="/static/js/script.js"></script>
 
-    <script>
-        document.getElementById('sendButton').addEventListener('click', function () {
-            const userInput = document.getElementById('questionInput').value;
-
-            if (userInput.trim() !== '') {
-                addUserMessage(userInput);
-                document.getElementById('questionInput').value = '';  // Clear the input after sending
-
-                // Send the user input to the backend API
-                fetch('/api', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ text: userInput })
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.response) {
-                            addResponseMessage(data.response);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                    });
-            }
-        });
-
-        function addUserMessage(message) {
-            const chatContainer = document.getElementById('chatContainer');
-            const userBubble = document.createElement('div');
-            userBubble.classList.add('chat-bubble', 'user-bubble');
-            userBubble.textContent = message;
-            chatContainer.appendChild(userBubble);
-            chatContainer.scrollTop = chatContainer.scrollHeight;  // Scroll to bottom
-        }
-
-        function addResponseMessage(message) {
-            const chatContainer = document.getElementById('chatContainer');
-            const responseBubble = document.createElement('div');
-            responseBubble.classList.add('chat-bubble', 'response-bubble');
-            responseBubble.textContent = message;
-            chatContainer.appendChild(responseBubble);
-            chatContainer.scrollTop = chatContainer.scrollHeight;  // Scroll to bottom
-        }
-    </script>
 </body>
 
 </html>
